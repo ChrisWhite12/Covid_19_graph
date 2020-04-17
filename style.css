@@ -1,0 +1,8 @@
+#myChart{
+    position: relative;
+    border: 2px solid black;
+    background-color: #cfd8af;
+    width: 90vw;
+    height: 90vh;
+    left: 5vw;
+}
