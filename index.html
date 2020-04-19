@@ -8,9 +8,57 @@
     <script type="text/javascript" src="Chart.js"></script>
 </head>
 <body>
-    <h1>COVID19 Graph</h1>
-    <div>   
-        <canvas id="myChart" width="400" height="400"></canvas>
+    <div class="body_div">
+        <h1 class="chart_title">COVID19 Graph</h1>
+        <div class="chart_div">   
+            <canvas id="Chart"></canvas>
+        </div>
+
+        <div class="state_select">
+            <div>
+                <input type="radio" id="QLD_check" class="state_check" name="state_select" data-num = 0 checked>
+                <label for="QLD_check">QLD</label>
+            </div>
+            <div>
+                <input type="radio" id="NSW_check" class="state_check" name="state_select" data-num = 1>
+                <label for="NSW_check">NSW</label>
+            </div>
+            <div>
+                <input type="radio" id="VIC_check" class="state_check" name="state_select" data-num = 2>
+                <label for="VIC_check">VIC</label>
+            </div>
+            <div>
+                <input type="radio" id="SA_check" class="state_check" name="state_select" data-num = 3>
+                <label for="SA_check">SA</label>
+            </div>
+            <div>
+                <input type="radio" id="WA_check" class="state_check" name= "state_select" data-num = 4>
+                <label for="WA_check">WA</label>
+            </div>
+            <div>
+                <input type="radio" id="ACT_check" class="state_check" name= "state_select" data-num = 5>
+                <label for="ACT_check">ACT</label>
+            </div>
+            <div>
+                <input type="radio" id="NT_check" class="state_check" name= "state_select" data-num = 6>
+                <label for="NT_check">NT</label>
+            </div>
+            <div>
+                <input type="radio" id="TAS_check" class="state_check" name= "state_select" data-num = 7>
+                <label for="TAS_check">TAS</label>
+            </div>
+        </div>
+
+        <select name="graph_sel" id="graph_sel">
+            <option value="linear_graph" selected>Cumulative and Daily values vs. time (Linear)</option>
+            <option value="log_graph">Cumulative vs Daily over time (Log)</option>
+        </select>
+
+        <!-- <div class="date_slide">
+            <input type="range" id = "range1" name="date_slide" min="0" max="100">
+            <label for="range1">Date</label>
+
+        </div> -->
     </div>
 
     <script type="text/javascript" src="main.js"></script>
