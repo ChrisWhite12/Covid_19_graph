@@ -14,7 +14,7 @@ class State{
         }
         
         for (let index = 0; index < this.cumul.length; index++) {
-            if(this.cumul[index] === undefined){
+            if(this.cumul[index] === undefined){                        //if undefined, the current point equal the last one
                 this.cumul[index] = this.cumul[index-1];
             }
         }
@@ -22,9 +22,12 @@ class State{
         var cumul_temp = 0;
 
         this.cumul.forEach((el,ind) => {
-            if(el != undefined){
+            if(el != undefined && (el - cumul_temp) >= 0){
                 this.daily[ind] = el - cumul_temp;
                 cumul_temp = el; 
+            }
+            else{
+                this.daily[ind] = 0
             }
 
         })
@@ -36,7 +39,7 @@ class State{
     }
     render_linear(){
         var data = [];
-        data[0] = [{
+        data = [{                                            //do for each selected state
             label: `${this.state} - Cumulative`,
             borderColor: this.color,
             pointBorderColor: 'rgba(0,0,0,0)',
@@ -54,58 +57,21 @@ class State{
             fill: true,
             yAxisID: 'y1'
         }]
-
-        data[1] = {y: {
-            display: true,
-            position: 'left',
-            scaleLabel: {
-                display: true,
-                labelString: 'Cumulative Cases'
-            }
-        },
-        y1:{
-            display: true,
-            position: 'right',
-            scaleLabel: {
-                display: true,
-                labelString: 'Daily Cases'
-            }
-        }}
-
+        //for each state |el|
+        //data.push(el.data)
         return data;
     }
     render_log(){
         var data = []
         
-        data[0] = [
+        data = [                                             //do for each selected state
         {
             label: `${this.state} - Cumulative vs. Daily`,
             borderColor: this.color,
             data: this.logval,
         }
         ]
-
-        data[1] = {
-            y:{
-                display: true,
-                type: 'logarithmic',
-                scaleLabel: {
-                    display: true,
-                    labelString: 'Daily Cases'
-                }
-            },
-            x:{
-                display: true,
-                type: 'logarithmic',
-                scaleLabel: {
-                    display: true,
-                    labelString: 'Cumulative Cases'
-                }
-            }
-        }
         return data;
-
-
     }
 }
 
@@ -133,7 +99,47 @@ var zero_date = '';
 var zero_month = '';
 
 var check_all = document.querySelectorAll(".state_check");
-//console.log(check_all)
+console.log(check_all)
+var state_sel = []
+
+var linear_scales = {y: {
+                        display: true,
+                        position: 'left',
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Cumulative Cases'
+                        }
+                    },
+                    y1:{
+                        display: true,
+                        position: 'right',
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Daily Cases'
+                        }
+                    }}
+
+
+var log_scales = {
+                    y:{
+                        display: true,
+                        type: 'logarithmic',
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Daily Cases'
+                        }
+                    },
+                    x:{
+                        display: true,
+                        type: 'logarithmic',
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Cumulative Cases'
+                        }
+                    }
+                }
+
+
 
 //create date string from first case to current day
 for (let index = 0; index < days_elapsed; index++) {
@@ -144,21 +150,53 @@ for (let index = 0; index < days_elapsed; index++) {
     start_date.setDate(start_date.getDate()+1)
 }
 // console.log(date_arr)
+
+function get_states_data(graph) {
+    data_out = []
+    state_sel = []
+    check_all.forEach(el => {                       //get checked states
+        if (el.checked == true){
+            state_sel.push(el.dataset.num)
+            console.log(`S - ${state_sel}`)
+        };
+    })
+    if(graph == 'linear_graph'){
+        state_sel.forEach(element => {
+            all_states[element].render_linear().forEach( el => {
+                data_out.push(el)
+            })
+        })
+    }
+    else if(graph == 'log_graph'){
+        state_sel.forEach(element => {
+            all_states[element].render_log().forEach( el => {
+                data_out.push(el)
+            })
+        })
+    }
+
+    console.log(data_out)
+    return data_out;
+}
+
+
+
 var config = {
     type: 'line',
     data: {
         labels: date_arr,
-        datasets: all_states[state_index2].render_linear()[0]
+        datasets: get_states_data('linear_graph')
     },
     options: {
         responsive: true,
-        scales: all_states[state_index2].render_linear()[1],
+        scales: linear_scales,
         animation:{
-            duration: 500
+            duration: 200
         }
         
     }
 }
+
 
 
 //retrive the json file
@@ -174,10 +212,10 @@ request.onload = function() {
     
     upd.forEach(upd_el => {
         date_arr.forEach((date_el , date_i) => {
-            for (let state_index = 0; state_index < all_states.length; state_index++) {
-                if( upd_el.State == all_states[state_index].state){
-                    if(upd_el.Date == date_el){
-                        if(upd_el["Cumulative case count"] != ''){
+            for (let state_index = 0; state_index < all_states.length; state_index++) {         //for all states
+                if( upd_el.State == all_states[state_index].state){                             //match states
+                    if(upd_el.Date == date_el){                                                 //when date matches
+                        if(upd_el["Cumulative case count"] != ''){ //check if not nil and > 0
                             all_states[state_index].cumul[date_i] = (Number(upd_el["Cumulative case count"]))
                         }
                     }           
@@ -186,7 +224,7 @@ request.onload = function() {
         })
     });
 
-    all_states.forEach(el => {el.cal_values();})
+    all_states.forEach(el => {el.cal_values();})                    //calculate the cumulative values
 
 var ctx = document.getElementById('Chart');
 
@@ -198,49 +236,50 @@ request.myChart = new Chart(ctx, config);
 document.getElementById('graph_sel').addEventListener('change', function() {
     var el = document.getElementById('graph_sel');
     if(el.value == 'log_graph'){
-        console.log('log')
+        // console.log('log')
         config.type = 'scatter';
         console.log(state_index2);
-        config.data.datasets = all_states[state_index2].render_log()[0]
-        config.options.scales = all_states[state_index2].render_log()[1] 
+        config.data.datasets = get_states_data(el.value)
+
+        config.options.scales = log_scales;
     }
     else if(el.value == 'linear_graph'){
-        console.log('linear')
+        // console.log('linear')
         config.type = 'line';
         console.log(state_index2);
-        config.data.datasets = all_states[state_index2].render_linear()[0]
-        config.options.scales = all_states[state_index2].render_linear()[1] 
+        config.data.datasets = get_states_data(el.value)
+
+        config.options.scales = linear_scales;
     }
     request.myChart.update();
 });
 
 check_all.forEach(el => {
     el.addEventListener('change', function() {
-        // console.log(`--${el.name}--`)
-        // console.log(el.dataset.num)
+        if (el.checked == true){
+            state_sel.push(el.dataset.num)
+            console.log(`S - ${state_sel}`)
+        }
+
         var el2 = document.getElementById('graph_sel');
         state_index2 = el.dataset.num;
         if(el2.value == 'log_graph'){
             console.log('log')
             config.type = 'scatter';
             console.log(state_index2);
-            config.data.datasets = all_states[state_index2].render_log()[0]
-            config.options.scales = all_states[state_index2].render_log()[1] 
+            config.data.datasets = get_states_data(el2.value)
+            config.options.scales = log_scales;
         }
         else if(el2.value == 'linear_graph'){
             console.log('linear')
             config.type = 'line';
             console.log(state_index2);
-            config.data.datasets = all_states[state_index2].render_linear()[0]
-            config.options.scales = all_states[state_index2].render_linear()[1] 
+            config.data.datasets = get_states_data(el2.value)
+            config.options.scales = linear_scales;
         }
         request.myChart.update();
     })    
 })
-
-
-
-//store  each state into diferent varibles
 
 
 
