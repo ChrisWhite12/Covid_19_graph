@@ -179,6 +179,27 @@ function get_states_data(graph) {
     return data_out;
 }
 
+function plot_data(){
+    var el = document.getElementById('graph_sel');
+    if(el.value == 'log_graph'){
+        // console.log('log')
+        config.type = 'line';
+        console.log(state_index2);
+        config.data.datasets = get_states_data(el.value)
+
+        config.options.scales = log_scales;
+    }
+    else if(el.value == 'linear_graph'){
+        // console.log('linear')
+        config.type = 'line';
+        console.log(state_index2);
+        config.data.datasets = get_states_data(el.value)
+
+        config.options.scales = linear_scales;
+    }
+    myChart.update();
+}
+
 
 
 var config = {
@@ -201,58 +222,45 @@ var config = {
 
 //retrive the json file
 let requestURL = "https://interactive.guim.co.uk/docsdata/1q5gdePANXci8enuiS4oHUJxcxC13d6bjMRSicakychE.json"
-let request = new XMLHttpRequest();
-request.open('GET', requestURL);
-request.responseType = 'json';
-request.send();
 
-request.onload = function() {
-    const data1 = request.response;
-    const upd = data1.sheets.updates;
-    
-    upd.forEach(upd_el => {
-        date_arr.forEach((date_el , date_i) => {
-            for (let state_index = 0; state_index < all_states.length; state_index++) {         //for all states
-                if( upd_el.State == all_states[state_index].state){                             //match states
-                    if(upd_el.Date == date_el){                                                 //when date matches
-                        if(upd_el["Cumulative case count"] != ''){ //check if not nil and > 0
-                            all_states[state_index].cumul[date_i] = (Number(upd_el["Cumulative case count"]))
-                        }
-                    }           
-                }      
-            }
-        })
-    });
+// let request = new XMLHttpRequest();
+// request.open('GET', requestURL);
+// request.responseType = 'json';
+// request.send();
 
-    all_states.forEach(el => {el.cal_values();})                    //calculate the cumulative values
+axios.get(requestURL)
+    .then( response => {
+        const data1 = response.data;
+        // console.log(data1)
+        const upd = data1.sheets.updates;
+        // console.log(upd)
+        
+        upd.forEach(upd_el => {
+            date_arr.forEach((date_el , date_i) => {
+                for (let state_index = 0; state_index < all_states.length; state_index++) {         //for all states
+                    if( upd_el.State == all_states[state_index].state){                             //match states
+                        if(upd_el.Date == date_el){                                                 //when date matches
+                            if(upd_el["Cumulative case count"] != ''){ //check if not nil and > 0
+                                all_states[state_index].cumul[date_i] = (Number(upd_el["Cumulative case count"]))
+                            }
+                        }           
+                    }      
+                }
+            })
+        });
+
+        all_states.forEach(el => {el.cal_values();})                    //calculate the cumulative values
+        plot_data()
+    })
+    .catch(err => console.log(err))
 
 var ctx = document.getElementById('Chart');
 
 
-request.myChart = new Chart(ctx, config);
+myChart = new Chart(ctx, config);
+myChart.update();
 
-}
-
-document.getElementById('graph_sel').addEventListener('change', function() {
-    var el = document.getElementById('graph_sel');
-    if(el.value == 'log_graph'){
-        // console.log('log')
-        config.type = 'scatter';
-        console.log(state_index2);
-        config.data.datasets = get_states_data(el.value)
-
-        config.options.scales = log_scales;
-    }
-    else if(el.value == 'linear_graph'){
-        // console.log('linear')
-        config.type = 'line';
-        console.log(state_index2);
-        config.data.datasets = get_states_data(el.value)
-
-        config.options.scales = linear_scales;
-    }
-    request.myChart.update();
-});
+document.getElementById('graph_sel').addEventListener('change', plot_data);
 
 check_all.forEach(el => {
     el.addEventListener('change', function() {
@@ -265,7 +273,7 @@ check_all.forEach(el => {
         state_index2 = el.dataset.num;
         if(el2.value == 'log_graph'){
             console.log('log')
-            config.type = 'scatter';
+            config.type = 'line';
             console.log(state_index2);
             config.data.datasets = get_states_data(el2.value)
             config.options.scales = log_scales;
@@ -277,7 +285,7 @@ check_all.forEach(el => {
             config.data.datasets = get_states_data(el2.value)
             config.options.scales = linear_scales;
         }
-        request.myChart.update();
+        myChart.update();
     })    
 })
 
